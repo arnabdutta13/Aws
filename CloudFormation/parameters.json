@@ -1,0 +1,45 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Parameters demo",
+    "Metadata": {
+
+    },
+    "Parameters": {
+      "InstanceType": {
+          "Description": "Choose Instance Type",
+          "Type": "String",
+          "Default": "t2.micro",
+          "AllowedValues" : ["t2.micro", "m1.small", "m1.large"]
+      },
+      "DBPassword": {
+          "Description": "Enter the DB Password",
+          "Type": "String",
+          "MaxLength" : 12,
+          "MinLength" : 6,
+          "NoEcho" : true
+      },
+      "AZs": {
+          "Description": "Choose a AZ",
+          "Type": "AWS::EC2::AvailabilityZone::Name"
+      }
+    },
+    "Mappings": {
+
+    },
+    "Conditions": {
+
+    },
+    "Resources": {
+      "MyAppVPC": {
+        "Type": "AWS::EC2::VPC",
+        "Properties": {
+          "CidrBlock": "10.20.0.0/16",
+          "InstanceTenancy" : "default",
+          "Tags": [{ "Key": "name", "Value":  "MyAppVPC" }]
+        }
+      }
+    },
+    "Outputs": {
+
+    }
+}

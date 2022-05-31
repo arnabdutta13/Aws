@@ -1,0 +1,29 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "This is a sample vpc demo for Cloudview Template",
+    "Metadata": {
+
+    },
+    "Parameters": {
+
+    },
+    "Mappings": {
+
+    },
+    "Conditions": {
+
+    },
+    "Resources": {
+      "MyAppVPC": {
+        "Type": "AWS::EC2::VPC",
+        "Properties": {
+          "CidrBlock": "10.20.0.0/16",
+          "InstanceTenancy" : "default",
+          "Tags": [{ "Key": "name", "Value":  "MyAppVPC" }]
+        }
+      }
+    },
+    "Outputs": {
+
+    }
+}

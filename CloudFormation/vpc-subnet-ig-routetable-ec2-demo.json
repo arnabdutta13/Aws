@@ -1,0 +1,182 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Metadata": {
+
+    },
+    "Parameters": {
+      "MyAppVPCCidr": {
+          "Description": "Please enter the Cidr",
+          "Type": "String",
+          "Default": "10.23.0.0/16"
+      },
+      "MyAppVPCSubnet1Cidr": {
+          "Description": "Please enter the Subnet1 Cidr",
+          "Type": "String",
+          "Default": "10.23.1.0/24"
+      },
+      "MyAppVPCSubnet2Cidr": {
+          "Description": "Please enter the Subnet2 Cidr",
+          "Type": "String",
+          "Default": "10.23.2.0/24"
+      },
+      "Subnet1AZs": {
+          "Description": "Please choose AZ",
+          "Type": "AWS::EC2::AvailabilityZone::Name",
+          "Default": "-"
+      },
+      "Subnet2AZs": {
+          "Description": "Please choose AZ",
+          "Type": "AWS::EC2::AvailabilityZone::Name",
+          "Default": "-"
+      },
+      "WebServerKeyName": {
+          "Description": "Choose Key Name",
+          "Type": "AWS::EC2::KeyPair::KeyName"
+      },
+      "WebServerInstanceType": {
+          "Description": "Choose an instance type",
+          "Type": "String",
+          "Default": "t2.micro",
+          "AllowedValues" : ["t2.micro", "t2.nano", "t2.small"]
+      },
+      "WebServerAMID": {
+          "Description": "Choose AMID for Webserver",
+          "Type": "String",
+          "Default" : "ami-0bd6906508e74f692"
+      }
+    },
+    "Mappings": {
+
+    },
+    "Conditions": {
+
+    },
+    "Resources": {
+      "MyAppVPC": {
+        "Type": "AWS::EC2::VPC",
+        "Properties": {
+          "CidrBlock": { "Ref": "MyAppVPCCidr" },
+          "Tags": [{ "Key": "Name", "Value":  "MyAppVPC" }]
+        }
+      },
+      "MyAppVPCSubnet1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "MapPublicIpOnLaunch": true,
+          "AvailabilityZone": { "Ref": "Subnet1AZs" },
+          "VpcId": { "Ref": "MyAppVPC" },
+          "CidrBlock": { "Ref": "MyAppVPCSubnet1Cidr" },
+          "Tags": [{ "Key": "Name", "Value":  "MyAppVPCSubnet1" }]
+        }
+      },
+      "MyAppVPCSubnet2": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "MapPublicIpOnLaunch": true,
+          "AvailabilityZone": { "Ref": "Subnet2AZs" },
+          "VpcId": { "Ref": "MyAppVPC" },
+          "CidrBlock": { "Ref": "MyAppVPCSubnet2Cidr" },
+          "Tags": [{ "Key": "Name", "Value":  "MyAppVPCSubnet2" }]
+        }
+      },
+      "MyAppIG": {
+        "Type": "AWS::EC2::InternetGateway",
+        "Properties": {
+          "Tags": [{ "Key": "Name", "Value":  "MyAppIG" }]
+        }
+      },
+      "AttachGateway": {
+        "Type": "AWS::EC2::VPCGatewayAttachment",
+        "Properties": {
+          "VpcId": { "Ref": "MyAppVPC" },
+          "InternetGatewayId": { "Ref": "MyAppIG" }
+        }
+      },
+      "MyAppVPCPublicSubnetRT": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "VpcId": { "Ref": "MyAppVPC" },
+          "Tags": [{ "Key": "Name", "Value":  "MyAppVPCPublicSubnetRT" }]
+        }
+      },
+      "RouteMyAppIG": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "RouteTableId": { "Ref": "MyAppVPCPublicSubnetRT" },
+          "DestinationCidrBlock": "0.0.0.0/0",
+          "GatewayId": { "Ref": "MyAppIG" }
+        }
+      },
+      "MyAppVPCSubnet1RTAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "SubnetId": { "Ref": "MyAppVPCSubnet1" },
+          "RouteTableId": { "Ref": "MyAppVPCPublicSubnetRT" }
+        }
+      },
+      "MyAppVPCSubnet2RTAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "SubnetId": { "Ref": "MyAppVPCSubnet2" },
+          "RouteTableId": { "Ref": "MyAppVPCPublicSubnetRT" }
+        }
+      },
+      "WebServerSecurityGroup" : {
+        "Type" : "AWS::EC2::SecurityGroup",
+        "Properties" : {
+          "GroupName" : "WebServerSecurityGroup",
+          "GroupDescription" : "Security group for webservers",
+          "SecurityGroupIngress" : [
+            {
+              "IpProtocol" : "tcp",
+              "FromPort" : 80,
+              "ToPort" : 80,
+              "CidrIp" : "0.0.0.0/0"
+            }, {
+              "IpProtocol" : "tcp",
+              "FromPort" : 22,
+              "ToPort" : 22,
+              "CidrIp" : "0.0.0.0/0"
+            }
+          ],
+          "VpcId" : { "Ref": "MyAppVPC" },
+          "Tags" :  [ { "Key": "Name", "Value":  "WebServerSecurityGroup" } ]
+        }
+      },
+      "WebServer1": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+              "KeyName": { "Ref": "WebServerKeyName" },
+              "ImageId":  { "Ref": "WebServerAMID" } ,
+              "InstanceType": { "Ref": "WebServerInstanceType" },
+              "Monitoring": "false",
+              "SecurityGroupIds" : [{ "Ref": "WebServerSecurityGroup" }],
+              "SubnetId" : { "Ref": "MyAppVPCSubnet1" },
+              "Tags": [
+                  {
+                      "Key": "Name",
+                      "Value": "WebServer1"
+                  }
+              ],
+              "UserData": {
+                  "Fn::Base64": {
+                      "Fn::Join": [
+                          "",
+                          [
+                              "#!/bin/bash -ex",
+                              "yum install httpd -y \n",
+                              "chkconfig httpd on \n",
+                              "echo '<h1>Deployed to CloudFormation</h1>' > /var/www/html/index.html \n",
+                              "service httpd start"
+                          ]
+                      ]
+                  }
+              }
+      }
+              }
+    },
+    "Outputs": {
+
+    }
+}

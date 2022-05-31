@@ -1,0 +1,108 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Metadata": {
+
+    },
+    "Parameters": {
+      "WebServerKeyName": {
+          "Description": "Choose Key Name",
+          "Type": "AWS::EC2::KeyPair::KeyName"
+      },
+      "WebServerInstanceType": {
+          "Description": "Choose an instance type",
+          "Type": "String",
+          "Default": "t2.micro",
+          "AllowedValues" : ["t2.micro", "t2.nano", "t2.small"]
+      },
+      "WebServerAMID": {
+          "Description": "Choose AMID for Webserver",
+          "Type": "String",
+          "Default" : "ami-0bd6906508e74f692"
+      }
+    },
+    "Mappings": {
+
+    },
+    "Conditions": {
+
+    },
+    "Resources": {
+
+      "WebServerTest": {
+          "Type": "AWS::EC2::Instance",
+          "Metadata" : {
+            "AWS::CloudFormation::Init": {
+              "configSets":{
+                  "Install":[
+                      "Install"
+                  ]
+              },
+              "Install": {
+                "packages": {
+                  "yum" : {
+                    "httpd" :[]
+                  }
+                },
+                "groups": {
+                },
+                "users": {
+                },
+                "sources": {
+                },
+                "files": {
+                  "/var/www/html/index.html" :{
+                    "content" : "<h1>Deployed to CloudFormation in AWS</h1>"
+                  }
+                },
+                "commands": {
+                },
+                "services": {
+                  "sysvinit" : {
+                    "httpd" : {
+                      "enabled" : "true",
+                      "ensureRunning" : "true"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "Properties": {
+              "ImageId":  { "Ref": "WebServerAMID" } ,
+              "KeyName": { "Ref": "WebServerKeyName" },
+              "InstanceType": { "Ref": "WebServerInstanceType" },
+              "Monitoring": "false",
+              "Tags": [
+                  {
+                      "Key": "Name",
+                      "Value": "WebServerTest"
+                  }
+              ],
+              "UserData": {
+                  "Fn::Base64": {
+                      "Fn::Join": [
+                          "",
+                          [
+                              "#!/bin/bash -ex",
+                              "yum install -y aws-cfn-bootstrap\n",
+                              "#Install the files and packages from metadata \n",
+                              "/opt/aws/bin/cnf-init -v ",
+                              "         --stack ",
+                              { "Ref": "AWS::StackName" },
+                              "         --resource WebServerTest ",
+                              "         --configsets Install ",
+                              "         --region ",
+                              { "Ref": "AWS::Region" },
+                              "\n"
+                          ]
+                      ]
+                  }
+              }
+            }
+        }
+    },
+    "Outputs": {
+
+    }
+}

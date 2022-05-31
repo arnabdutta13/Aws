@@ -1,0 +1,114 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Metadata": {
+
+    },
+    "Parameters": {
+      "MyAppVPCCidr": {
+          "Description": "Please enter the Cidr",
+          "Type": "String",
+          "Default": "10.23.0.0/16"
+      },
+      "MyAppVPCSubnet1Cidr": {
+          "Description": "Please enter the Subnet1 Cidr",
+          "Type": "String",
+          "Default": "10.23.1.0/24"
+      },
+      "MyAppVPCSubnet2Cidr": {
+          "Description": "Please enter the Subnet2 Cidr",
+          "Type": "String",
+          "Default": "10.23.2.0/24"
+      },
+      "Subnet1AZs": {
+          "Description": "Please choose AZ",
+          "Type": "AWS::EC2::AvailabilityZone::Name",
+          "Default": "-"
+      },
+      "Subnet2AZs": {
+          "Description": "Please choose AZ",
+          "Type": "AWS::EC2::AvailabilityZone::Name",
+          "Default": "-"
+      }
+    },
+    "Mappings": {
+
+    },
+    "Conditions": {
+
+    },
+    "Resources": {
+      "MyAppVPC": {
+        "Type": "AWS::EC2::VPC",
+        "Properties": {
+          "CidrBlock": { "Ref": "MyAppVPCCidr" },
+          "Tags": [{ "Key": "name", "Value":  "MyAppVPC" }]
+        }
+      },
+      "MyAppVPCSubnet1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "MapPublicIpOnLaunch": true,
+          "AvailabilityZone": { "Ref": "Subnet1AZs" },
+          "VpcId": { "Ref": "MyAppVPC" },
+          "CidrBlock": { "Ref": "MyAppVPCSubnet1Cidr" },
+          "Tags": [{ "Key": "name", "Value":  "MyAppVPCSubnet1" }]
+        }
+      },
+      "MyAppVPCSubnet2": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "MapPublicIpOnLaunch": true,
+          "AvailabilityZone": { "Ref": "Subnet2AZs" },
+          "VpcId": { "Ref": "MyAppVPC" },
+          "CidrBlock": { "Ref": "MyAppVPCSubnet2Cidr" },
+          "Tags": [{ "Key": "name", "Value":  "MyAppVPCSubnet2" }]
+        }
+      },
+      "MyAppIG": {
+        "Type": "AWS::EC2::InternetGateway",
+        "Properties": {
+          "Tags": [{ "Key": "name", "Value":  "MyAppIG" }]
+        }
+      },
+      "AttachGateway": {
+        "Type": "AWS::EC2::VPCGatewayAttachment",
+        "Properties": {
+          "VpcId": { "Ref": "MyAppVPC" },
+          "InternetGatewayId": { "Ref": "MyAppIG" }
+        }
+      },
+      "MyAppVPCPublicSubnetRT": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "VpcId": { "Ref": "MyAppVPC" },
+          "Tags": [{ "Key": "name", "Value":  "MyAppVPCPublicSubnetRT" }]
+        }
+      },
+      "RouteMyAppIG": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "RouteTableId": { "Ref": "MyAppVPCPublicSubnetRT" },
+          "DestinationCidrBlock": "0.0.0.0/0",
+          "GatewayId": { "Ref": "MyAppIG" }
+        }
+      },
+      "MyAppVPCSubnet1RTAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "SubnetId": { "Ref": "MyAppVPCSubnet1" },
+          "RouteTableId": { "Ref": "MyAppVPCPublicSubnetRT" }
+        }
+      },
+      "MyAppVPCSubnet2RTAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "SubnetId": { "Ref": "MyAppVPCSubnet2" },
+          "RouteTableId": { "Ref": "MyAppVPCPublicSubnetRT" }
+        }
+      }
+    },
+    "Outputs": {
+
+    }
+}
